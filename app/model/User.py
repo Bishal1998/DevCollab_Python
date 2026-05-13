@@ -1,10 +1,17 @@
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
 from pydantic import EmailStr
 from sqlalchemy.dialects import postgresql
-from sqlmodel import Column, Field, SQLModel
+from sqlmodel import Column, Field, Relationship, SQLModel
+
+from app.model import Subscription
+
+if TYPE_CHECKING:
+    from app.model import Subscription
 
 
 class User(SQLModel, table=True):
@@ -26,4 +33,8 @@ class User(SQLModel, table=True):
     )
     deleted_at: Optional[datetime] = Field(
         sa_column=Column(postgresql.TIMESTAMP, default=None, nullable=True)
+    )
+
+    subscription: Subscription = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )

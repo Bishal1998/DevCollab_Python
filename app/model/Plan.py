@@ -1,7 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy.dialects import postgresql
-from sqlmodel import Column, Field, SQLModel
+from sqlmodel import Column, Field, Relationship, SQLModel
+
+from app.model import Subscription
+
+if TYPE_CHECKING:
+    from app.model import Subscription
 
 
 class Plan(SQLModel, table=True):
@@ -15,3 +23,7 @@ class Plan(SQLModel, table=True):
     max_previews: int
     unlimited_ai: bool = Field(default=False)
     active: bool
+
+    subscription: Subscription = Relationship(
+        back_populates="plan", sa_relationship_kwargs={"lazy": "selectin"}
+    )
