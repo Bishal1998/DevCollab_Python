@@ -8,8 +8,6 @@ from uuid import UUID, uuid4
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Column, Field, Relationship, SQLModel
 
-from app.model import Plan, User
-
 if TYPE_CHECKING:
     from app.model import Plan, User
 
