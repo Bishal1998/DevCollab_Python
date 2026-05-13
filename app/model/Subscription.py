@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
@@ -11,6 +12,14 @@ from app.model import Plan, User
 
 if TYPE_CHECKING:
     from app.model import Plan, User
+
+
+class SubscriptionStatus(str, Enum):
+    ACTIVE = "active"
+    TRAILING = "trailing"
+    CANCELED = "canceled"
+    PAST_DUE = "past_due"
+    INCOMPLETE = "incomplete"
 
 
 class Subscription(SQLModel, table=True):
@@ -30,8 +39,12 @@ class Subscription(SQLModel, table=True):
 
     stripe_customer_id: str
     stripe_subscription_id: str
+
+    status: SubscriptionStatus = Field(default=SubscriptionStatus.ACTIVE)
+
     current_period_start: datetime
     current_period_end: datetime
+    cancel_at_period_end: bool = Field(default=False)
     created_at: datetime = Field(
         sa_column=Column(postgresql.TIMESTAMP, default=datetime.now)
     )
