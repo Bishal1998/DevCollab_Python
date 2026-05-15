@@ -9,7 +9,13 @@ from sqlalchemy.dialects import postgresql
 from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.model import ChatMessage, ChatSession, ProjectMember, Subscription
+    from app.model import (
+        ChatMessage,
+        ChatSession,
+        ProjectMember,
+        Subscription,
+        UsuageLog,
+    )
 
 
 class User(SQLModel, table=True):
@@ -44,5 +50,9 @@ class User(SQLModel, table=True):
     )
 
     chat_message: ChatMessage = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
+    usuage_log: UsuageLog = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )

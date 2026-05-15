@@ -7,6 +7,8 @@ from uuid import UUID, uuid4
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Column, Field, Relationship, SQLModel
 
+from app.model import UsuageLog
+
 if TYPE_CHECKING:
     from app.model import ChatMessage, ChatSession, Preview, ProjectFile, ProjectMember
 
@@ -48,5 +50,9 @@ class Project(SQLModel, table=True):
     )
 
     chat_message: ChatMessage = Relationship(
+        back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
+    usuage_log: UsuageLog = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
