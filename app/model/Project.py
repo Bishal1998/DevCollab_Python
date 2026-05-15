@@ -8,7 +8,7 @@ from sqlalchemy.dialects import postgresql
 from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.model import ProjectMember
+    from app.model import ProjectFile, ProjectMember
 
 
 class Project(SQLModel, table=True):
@@ -32,5 +32,9 @@ class Project(SQLModel, table=True):
     )
 
     project_member: list[ProjectMember] = Relationship(
+        back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
+    project_file: list[ProjectFile] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
