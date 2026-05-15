@@ -9,7 +9,7 @@ from sqlalchemy.dialects import postgresql
 from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.model import ProjectMember, Subscription
+    from app.model import ChatSession, ProjectMember, Subscription
 
 
 class User(SQLModel, table=True):
@@ -38,3 +38,7 @@ class User(SQLModel, table=True):
     )
 
     project_member: list[ProjectMember] = Relationship(back_populates="user")
+
+    chat_session: list[ChatSession] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
+    )
