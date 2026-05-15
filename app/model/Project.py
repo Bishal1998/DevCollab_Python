@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Column, Field, Relationship, SQLModel
 
-from app.model import UsuageLog
-
 if TYPE_CHECKING:
-    from app.model import ChatMessage, ChatSession, Preview, ProjectFile, ProjectMember
+    from app.model import (
+        ChatMessage,
+        ChatSession,
+        Preview,
+        ProjectFile,
+        ProjectMember,
+        UsageLog,
+    )
 
 
 class Project(SQLModel, table=True):
@@ -33,11 +38,11 @@ class Project(SQLModel, table=True):
         sa_column=Column(postgresql.TIMESTAMP, default=None, nullable=True)
     )
 
-    project_member: list[ProjectMember] = Relationship(
+    project_member: List[ProjectMember] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
-    project_file: list[ProjectFile] = Relationship(
+    project_file: List[ProjectFile] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
@@ -45,7 +50,7 @@ class Project(SQLModel, table=True):
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
-    chat_session: list[ChatSession] = Relationship(
+    chat_session: List[ChatSession] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
@@ -53,6 +58,6 @@ class Project(SQLModel, table=True):
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
-    usuage_log: UsuageLog = Relationship(
+    usage_log: UsageLog = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )

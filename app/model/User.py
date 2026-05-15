@@ -14,7 +14,7 @@ if TYPE_CHECKING:
         ChatSession,
         ProjectMember,
         Subscription,
-        UsuageLog,
+        UsageLog,
     )
 
 
@@ -53,6 +53,6 @@ class User(SQLModel, table=True):
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
-    usuage_log: UsuageLog = Relationship(
+    usage_log: UsageLog = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )

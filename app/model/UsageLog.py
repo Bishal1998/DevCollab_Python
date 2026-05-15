@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy.dialects import postgresql
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from app.model import Project, User
 
 
-class UsuageLog(SQLModel, table=True):
+class UsageLog(SQLModel, table=True):
     __tablename__ = "usuage_logs"
 
     id: UUID = Field(sa_column=Column(postgresql.UUID, default=uuid4, primary_key=True))
@@ -24,7 +24,7 @@ class UsuageLog(SQLModel, table=True):
     )
 
     project: Project = Relationship(
-        back_populates="usuage_log", sa_relationship_kwargs={"lazy": "selectin"}
+        back_populates="usage_log", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
     action: str
