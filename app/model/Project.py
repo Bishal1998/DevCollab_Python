@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 from uuid import UUID, uuid4
@@ -22,9 +20,7 @@ class Project(SQLModel, table=True):
     __tablename__ = "projects"
 
     id: UUID = Field(sa_column=Column(postgresql.UUID, default=uuid4, primary_key=True))
-
     name: str = Field(nullable=False)
-
     is_public: bool = Field(default=False)
     created_at: datetime = Field(
         sa_column=Column(postgresql.TIMESTAMP, default=datetime.now)
@@ -38,26 +34,21 @@ class Project(SQLModel, table=True):
         sa_column=Column(postgresql.TIMESTAMP, default=None, nullable=True)
     )
 
-    project_member: List[ProjectMember] = Relationship(
+    project_member: List["ProjectMember"] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
-
-    project_file: List[ProjectFile] = Relationship(
+    project_file: List["ProjectFile"] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
-
-    preview: Preview = Relationship(
+    preview: Optional["Preview"] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
-
-    chat_session: List[ChatSession] = Relationship(
+    chat_session: List["ChatSession"] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
-
-    chat_message: ChatMessage = Relationship(
+    chat_message: List["ChatMessage"] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )
-
-    usage_log: UsageLog = Relationship(
+    usage_log: List["UsageLog"] = Relationship(
         back_populates="project", sa_relationship_kwargs={"lazy": "selectin"}
     )

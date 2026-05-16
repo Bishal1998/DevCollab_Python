@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import EmailStr
@@ -39,20 +37,22 @@ class User(SQLModel, table=True):
         sa_column=Column(postgresql.TIMESTAMP, default=None, nullable=True)
     )
 
-    subscription: Subscription = Relationship(
+    subscription: Optional["Subscription"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )
-
-    project_member: list[ProjectMember] = Relationship(back_populates="user")
-
-    chat_session: list[ChatSession] = Relationship(
+    project_member: List["ProjectMember"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={
+            "foreign_keys": "[ProjectMember.user_id]",
+            "lazy": "selectin",
+        },
+    )
+    chat_session: List["ChatSession"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )
-
-    chat_message: ChatMessage = Relationship(
+    chat_message: List["ChatMessage"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )
-
-    usage_log: UsageLog = Relationship(
+    usage_log: List["UsageLog"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )

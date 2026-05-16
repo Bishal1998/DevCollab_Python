@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Optional
@@ -26,20 +24,11 @@ class Subscription(SQLModel, table=True):
     id: UUID = Field(sa_column=Column(postgresql.UUID, default=uuid4, primary_key=True))
 
     user_id: UUID = Field(foreign_key="users.id")
-    user: User = Relationship(
-        back_populates="subscription", sa_relationship_kwargs={"lazy": "selectin"}
-    )
-
     plan_id: UUID = Field(foreign_key="plans.id")
-    plan: Plan = Relationship(
-        back_populates="subscription", sa_relationship_kwargs={"lazy": "selectin"}
-    )
 
     stripe_customer_id: str
     stripe_subscription_id: str
-
     status: SubscriptionStatus = Field(default=SubscriptionStatus.ACTIVE)
-
     current_period_start: datetime
     current_period_end: datetime
     cancel_at_period_end: bool = Field(default=False)
@@ -50,4 +39,11 @@ class Subscription(SQLModel, table=True):
         sa_column=Column(
             postgresql.TIMESTAMP, default=None, nullable=True, onupdate=datetime.now
         )
+    )
+
+    user: Optional["User"] = Relationship(
+        back_populates="subscription", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    plan: Optional["Plan"] = Relationship(
+        back_populates="subscription", sa_relationship_kwargs={"lazy": "selectin"}
     )

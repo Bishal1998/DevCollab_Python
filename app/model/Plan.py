@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 from uuid import UUID, uuid4
 
 from sqlalchemy.dialects import postgresql
@@ -22,6 +20,6 @@ class Plan(SQLModel, table=True):
     unlimited_ai: bool = Field(default=False)
     active: bool
 
-    subscription: Subscription = Relationship(
+    subscription: List["Subscription"] = Relationship(
         back_populates="plan", sa_relationship_kwargs={"lazy": "selectin"}
     )
