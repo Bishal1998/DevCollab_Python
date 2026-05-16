@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.model import Project
-from app.schema.ProjectSchema import CreateProject, UpdateProject
+from app.schema.project_schema import CreateProject, UpdateProject
 from app.services import BaseService
 
 

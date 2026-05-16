@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter
 
 from app.dependency import AuthServiceDep
-from app.schema.AuthSchema import Login, Signup
+from app.schema.auth_schema import Login, Signup
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 

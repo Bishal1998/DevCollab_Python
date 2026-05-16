@@ -2,7 +2,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schema.AuthSchema import Login, Signup
+from app.schema.auth_schema import Login, Signup
 
 
 class AuthService:
