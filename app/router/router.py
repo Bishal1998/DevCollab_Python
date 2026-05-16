@@ -5,6 +5,7 @@ from app.router.file_router import router as FileRouter
 from app.router.plan_router import router as PlanRouter
 from app.router.project_member_router import router as ProjectMemberRouter
 from app.router.project_router import router as ProjectRouter
+from app.router.usage_router import router as UsageRouter
 
 master_router = APIRouter()
 
@@ -13,3 +14,4 @@ master_router.include_router(ProjectRouter)
 master_router.include_router(FileRouter)
 master_router.include_router(ProjectMemberRouter)
 master_router.include_router(PlanRouter)
+master_router.include_router(UsageRouter)

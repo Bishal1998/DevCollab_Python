@@ -11,6 +11,7 @@ from app.services import (
     ProjectMemberService,
     ProjectService,
     SubscriptionService,
+    UsageService,
 )
 
 session_dep = Annotated[AsyncSession, Depends(get_session)]
@@ -60,3 +61,10 @@ def get_plan_service(session: session_dep):
 
 
 PlanServiceDep = Annotated[PlanService, Depends(get_plan_service)]
+
+
+def get_usage_service(session: session_dep):
+    return UsageService(session)
+
+
+UsageServiceDep = Annotated[UsageService, Depends(get_usage_service)]

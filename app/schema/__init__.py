@@ -4,6 +4,7 @@ from app.schema.plan_schema import ReadPlan
 from app.schema.project_member_schema import InviteMember, ReadProjectMember
 from app.schema.project_schema import CreateProject, ReadProject, UpdateProject
 from app.schema.subscription_schema import ReadSubscription
+from app.schema.usage_schema import ReadUsage
 
 __all__ = [
     "Login",
@@ -16,4 +17,5 @@ __all__ = [
     "InviteMember",
     "ReadPlan",
     "ReadSubscription",
+    "ReadUsage",
 ]

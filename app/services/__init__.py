@@ -5,6 +5,7 @@ from app.services.plan_service import PlanService
 from app.services.project_member_service import ProjectMemberService
 from app.services.project_service import ProjectService
 from app.services.subscription_service import SubscriptionService
+from app.services.usage_service import UsageService
 
 __all__ = [
     "BaseService",
@@ -14,4 +15,5 @@ __all__ = [
     "ProjectMemberService",
     "SubscriptionService",
     "PlanService",
+    "UsageService",
 ]
