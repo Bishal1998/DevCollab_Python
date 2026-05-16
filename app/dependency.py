@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_session
 from app.services import AuthService
 
-sessionDep = Annotated[str, Depends(get_session)]
+sessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
-def get_auth_service(session: AsyncSession):
+def get_auth_service(session: sessionDep):
     return AuthService(session)
 
 
