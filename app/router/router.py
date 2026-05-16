@@ -1,9 +1,11 @@
 from fastapi import APIRouter
 
-from app.router.AuthRouter import router as AuthRouter
-from app.router.ProjectRouter import router as ProjectRouter
+from app.router.auth_router import router as AuthRouter
+from app.router.file_router import router as FileRouter
+from app.router.project_router import router as ProjectRouter
 
 master_router = APIRouter()
 
 master_router.include_router(AuthRouter)
 master_router.include_router(ProjectRouter)
+master_router.include_router(FileRouter)
