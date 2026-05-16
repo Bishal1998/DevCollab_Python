@@ -4,7 +4,14 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_session
-from app.services import AuthService, FileService, ProjectMemberService, ProjectService
+from app.services import (
+    AuthService,
+    FileService,
+    PlanService,
+    ProjectMemberService,
+    ProjectService,
+    SubscriptionService,
+)
 
 session_dep = Annotated[AsyncSession, Depends(get_session)]
 
@@ -37,3 +44,19 @@ def get_project_member_service(session: session_dep):
 ProjectMemberServiceDep = Annotated[
     ProjectMemberService, Depends(get_project_member_service)
 ]
+
+
+def get_subscription_service(session: session_dep):
+    return SubscriptionService(session)
+
+
+SubscriptionServiceDep = Annotated[
+    SubscriptionService, Depends(get_subscription_service)
+]
+
+
+def get_plan_service(session: session_dep):
+    return PlanService(session)
+
+
+PlanServiceDep = Annotated[PlanService, Depends(get_plan_service)]
