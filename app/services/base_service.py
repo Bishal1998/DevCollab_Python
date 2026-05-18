@@ -23,7 +23,9 @@ class BaseService:
         return await self.session.get(self.model, id)
 
     async def _update(self, data: SQLModel):
-        return await self._create(data)
+        await self.session.commit()
+        await self.session.refresh(data)
+        return data
 
     async def _delete(self, model: SQLModel):
         await self.session.delete(model)

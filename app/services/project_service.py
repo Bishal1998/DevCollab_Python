@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -21,7 +22,7 @@ class ProjectService(BaseService):
     async def get(self, id: UUID):
         project = await self._get(id)
 
-        if not project:
+        if not project or project.deleted_at is not None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Project with id: {id} not found.",
@@ -42,4 +43,6 @@ class ProjectService(BaseService):
     async def delete(self, id: UUID):
         project = await self.get(id)
 
-        await self._delete(project)
+        project.deleted_at = datetime.now()
+
+        await self._update(project)
