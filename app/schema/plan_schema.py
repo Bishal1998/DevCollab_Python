@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ReadPlan(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     name: str
     max_projects: int

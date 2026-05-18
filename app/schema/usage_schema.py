@@ -1,10 +1,11 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ReadTodayUsage(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     tokens_used: int
     tokens_limit: int

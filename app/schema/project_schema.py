@@ -1,8 +1,10 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.schema.project_member_schema import ReadProjectMember
 
 
 class BaseProject(BaseModel):
@@ -14,12 +16,14 @@ class CreateProject(BaseProject):
 
 
 class ReadProject(BaseProject):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     name: str
     is_public: bool
     created_at: datetime
-    updated_at: Optional[datetime] | None = Field(default=None)
-    deleted_at: Optional[datetime] | None = Field(default=None)
+    updated_at: Optional[datetime] = None
+    deleted_at: Optional[datetime] = None
+    project_member: List[ReadProjectMember] = []
 
 
 class UpdateProject(BaseModel):
