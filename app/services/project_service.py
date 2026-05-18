@@ -4,7 +4,8 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.model import Project
+from app.model import Project, ProjectMember
+from app.model.project_member import ProjectMemberRole
 from app.schema.project_schema import CreateProject, UpdateProject
 from app.services import BaseService
 
@@ -17,7 +18,17 @@ class ProjectService(BaseService):
 
         new_project = Project(**data.model_dump())
 
-        return await self._create(new_project)
+        await self._create(new_project)
+
+        owner = ProjectMember(
+            user_id=UUID("b2b290c0-2a60-4a27-b94e-806b4677127d"),
+            project_id=new_project.id,
+            role=ProjectMemberRole.OWNER,
+        )
+
+        await self._create(owner)
+
+        return new_project
 
     async def get(self, id: UUID):
         project = await self._get(id)
