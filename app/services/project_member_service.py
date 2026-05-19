@@ -18,7 +18,7 @@ class ProjectMemberService(BaseService):
         super().__init__(ProjectMember, session)
 
     async def _get_project(self, project_id: UUID):
-        project = await self._get(Project, project_id)
+        project = await self.session.get(Project, project_id)
 
         if not project or project.deleted_at is not None:
             raise HTTPException(
@@ -28,7 +28,7 @@ class ProjectMemberService(BaseService):
         return project
 
     async def _get_user(self, user_id: UUID):
-        user = await self._get(User, user_id)
+        user = await self.session.get(User, user_id)
 
         if not user or user.deleted_at is not None:
             raise HTTPException(
