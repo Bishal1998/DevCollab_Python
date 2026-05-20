@@ -19,4 +19,12 @@ class DatabaseSettings(BaseSettings):
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
 
+class JWTSettings(BaseSettings):
+    SECRET_KEY: str
+    ALGORITHM: str
+
+    model_config = _base_setting
+
+
 db_settings = DatabaseSettings()
+jwt_settings = JWTSettings()
