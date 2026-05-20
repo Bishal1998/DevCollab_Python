@@ -1,9 +1,12 @@
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_session
+from app.model.user import User
 from app.services import (
     AuthService,
     FileService,
@@ -13,6 +16,7 @@ from app.services import (
     SubscriptionService,
     UsageService,
 )
+from app.utils.jwt_token import verify_access_token
 
 session_dep = Annotated[AsyncSession, Depends(get_session)]
 
@@ -68,3 +72,33 @@ def get_usage_service(session: session_dep):
 
 
 UsageServiceDep = Annotated[UsageService, Depends(get_usage_service)]
+
+bearer_scheme = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
+    session: session_dep,
+) -> User:
+    payload = verify_access_token(credentials.credentials)
+
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
+        )
+
+    user_id = payload.get("user_id")
+
+    user = await session.get(User, UUID(user_id)) if user_id else None
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user
+
+
+CurrentUserDep = Annotated[User, Depends(get_current_user)]

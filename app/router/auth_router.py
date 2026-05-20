@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from app.dependency import AuthServiceDep
+from app.dependency import AuthServiceDep, CurrentUserDep
 from app.schema.auth_schema import Login, Signup, Token
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
@@ -19,5 +19,5 @@ async def signup(data: Signup, service: AuthServiceDep):
 
 
 @router.get("/me")
-async def profile(id: UUID, service: AuthServiceDep):
-    return await service.profile(id)
+async def profile(current_user: CurrentUserDep):
+    return current_user

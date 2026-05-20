@@ -19,7 +19,7 @@ def generate_access_token(token: dict, time=10) -> str:
 
 def verify_access_token(token: str) -> dict:
     try:
-        jwt.decode(
+        return jwt.decode(
             token=token,
             key=jwt_settings.SECRET_KEY,
             algorithms=[jwt_settings.ALGORITHM],
