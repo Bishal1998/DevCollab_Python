@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -8,6 +10,15 @@ class BaseAuth(BaseModel):
 
 class Login(BaseAuth):
     pass
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"
+
+
+class TokenData(BaseModel):
+    user_id: UUID | None = None
 
 
 class Signup(BaseAuth):

@@ -3,12 +3,12 @@ from uuid import UUID
 from fastapi import APIRouter
 
 from app.dependency import AuthServiceDep
-from app.schema.auth_schema import Login, Signup
+from app.schema.auth_schema import Login, Signup, Token
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 
-@router.post("/login")
+@router.post("/login", response_model=Token)
 async def login(data: Login, service: AuthServiceDep):
     return await service.login(data)
 
