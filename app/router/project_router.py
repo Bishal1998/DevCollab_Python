@@ -2,20 +2,27 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from app.dependency import ProjectServiceDep
+from app.dependency import CurrentUserDep, ProjectServiceDep
 from app.schema.project_schema import CreateProject, ReadProject, UpdateProject
 
 router = APIRouter(prefix="/project", tags=["Project"])
 
 
 @router.post("/", response_model=ReadProject)
-async def create(data: CreateProject, service: ProjectServiceDep):
-    return await service.create(data)
+async def create(
+    data: CreateProject, service: ProjectServiceDep, current_user: CurrentUserDep
+):
+    return await service.create(data, current_user.id)
 
 
 @router.put("/{id}", response_model=ReadProject)
-async def update(id: UUID, data: UpdateProject, service: ProjectServiceDep):
-    return await service.update(id, data)
+async def update(
+    id: UUID,
+    data: UpdateProject,
+    service: ProjectServiceDep,
+    current_user: CurrentUserDep,
+):
+    return await service.update(id, data, current_user.id)
 
 
 @router.get("/{id}", response_model=ReadProject)
@@ -24,8 +31,8 @@ async def get(id: UUID, service: ProjectServiceDep):
 
 
 @router.delete("/{id}", response_model=dict)
-async def delete(id: UUID, service: ProjectServiceDep):
-    await service.delete(id)
+async def delete(id: UUID, service: ProjectServiceDep, current_user: CurrentUserDep):
+    await service.delete(id, current_user.id)
     return {"detail": f"Project with id: {id} deleted successfully."}
 
 

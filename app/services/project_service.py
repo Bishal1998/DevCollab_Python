@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from app.model import Project, ProjectMember
 from app.model.project_member import ProjectMemberRole
@@ -14,14 +15,14 @@ class ProjectService(BaseService):
     def __init__(self, session: AsyncSession):
         super().__init__(Project, session)
 
-    async def create(self, data: CreateProject):
+    async def create(self, data: CreateProject, current_user: UUID):
 
         new_project = Project(**data.model_dump())
 
         await self._create(new_project)
 
         owner = ProjectMember(
-            user_id=UUID("b2b290c0-2a60-4a27-b94e-806b4677127d"),
+            user_id=current_user,
             project_id=new_project.id,
             role=ProjectMemberRole.OWNER,
         )
@@ -41,8 +42,9 @@ class ProjectService(BaseService):
 
         return project
 
-    async def update(self, id: UUID, data: UpdateProject):
+    async def update(self, id: UUID, data: UpdateProject, current_user: UUID):
         project = await self.get(id)
+        await self.check_project_owner(id, current_user)
 
         updated_data = data.model_dump(exclude_none=True)
 
@@ -51,9 +53,24 @@ class ProjectService(BaseService):
 
         return await self._update(project)
 
-    async def delete(self, id: UUID):
+    async def delete(self, id: UUID, current_user: UUID):
         project = await self.get(id)
+        await self.check_project_owner(id, current_user)
 
-        project.deleted_at = datetime.now()
+        project.deleted_at = datetime.now(timezone.utc)
 
         await self._update(project)
+
+    async def check_project_owner(self, project_id: UUID, user_id: UUID):
+        project_member = await self.session.scalar(
+            select(ProjectMember).where(
+                ProjectMember.user_id == user_id,
+                ProjectMember.project_id == project_id,
+            )
+        )
+
+        if not project_member or project_member.role != ProjectMemberRole.OWNER:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only project owner can perform this action.",
+            )
