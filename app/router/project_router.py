@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -13,6 +14,11 @@ async def create(
     data: CreateProject, service: ProjectServiceDep, current_user: CurrentUserDep
 ):
     return await service.create(data, current_user.id)
+
+
+@router.get("/my-projects", response_model=List[ReadProject])
+async def get_my_projects(service: ProjectServiceDep, current_user: CurrentUserDep):
+    return await service.get_my_projects(current_user.id)
 
 
 @router.put("/{id}", response_model=ReadProject)
@@ -34,6 +40,3 @@ async def get(id: UUID, service: ProjectServiceDep):
 async def delete(id: UUID, service: ProjectServiceDep, current_user: CurrentUserDep):
     await service.delete(id, current_user.id)
     return {"detail": f"Project with id: {id} deleted successfully."}
-
-
-## Need to create GetMyProjects

@@ -76,3 +76,13 @@ class ProjectService(BaseService):
             )
 
         return project_member
+
+    async def get_my_projects(self, user_id: UUID):
+        result = await self.session.scalars(
+            select(Project)
+            .join(ProjectMember, ProjectMember.project_id == Project.id)
+            .where(ProjectMember.user_id == user_id)
+            .where(Project.deleted_at.is_(None))
+        )
+        projects = result.all()
+        return projects
