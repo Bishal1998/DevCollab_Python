@@ -4,7 +4,6 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from app.model.project import Project
 from app.model.project_member import ProjectMember, ProjectMemberRole
@@ -47,8 +46,11 @@ class ProjectMemberService(BaseService):
         members = result.all()
         return members
 
-    async def invite_by_email(self, project_id: UUID, invite_detail: InviteMember):
+    async def invite_by_email(
+        self, project_id: UUID, invite_detail: InviteMember, current_user: UUID
+    ):
         await self._get_project(project_id)
+        await self._check_project_owner(project_id, current_user)
 
         user = await self.session.scalar(
             select(User).where(User.email == invite_detail.email)
@@ -56,7 +58,7 @@ class ProjectMemberService(BaseService):
 
         if not user:
             raise HTTPException(
-                status_code=HTTP_404_NOT_FOUND,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"User not found with email : {invite_detail.email}",
             )
 
@@ -68,7 +70,7 @@ class ProjectMemberService(BaseService):
 
         if existing_member:
             raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User is already a member of this project.",
             )
 
@@ -76,17 +78,22 @@ class ProjectMemberService(BaseService):
             user_id=user.id,
             project_id=project_id,
             role=invite_detail.role,
-            ## TODO: invited_by=should be current logged in user
+            invited_by_id=current_user,
             invited_at=datetime.now(),
         )
 
         return await self._create(member)
 
     async def change_role(
-        self, project_id: UUID, user_id: UUID, role: ProjectMemberRole
+        self,
+        project_id: UUID,
+        user_id: UUID,
+        role: ProjectMemberRole,
+        current_user: UUID,
     ):
         await self._get_project(project_id)
         await self._get_user(user_id)
+        await self._check_project_owner(project_id, current_user)
 
         project_member = await self.session.scalar(
             select(ProjectMember)
@@ -103,7 +110,7 @@ class ProjectMemberService(BaseService):
         if project_member.role == ProjectMemberRole.OWNER:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You're the owner of the project",
+                detail="Cannot change the role of the project owner.",
             )
 
         if role == ProjectMemberRole.OWNER:
@@ -115,9 +122,10 @@ class ProjectMemberService(BaseService):
         project_member.role = role
         return await self._update(project_member)
 
-    async def remove_member(self, project_id: UUID, user_id: UUID):
+    async def remove_member(self, project_id: UUID, user_id: UUID, current_user: UUID):
         await self._get_project(project_id)
         await self._get_user(user_id)
+        await self._check_project_owner(project_id, current_user)
 
         project_member = await self.session.scalar(
             select(ProjectMember)
@@ -134,7 +142,7 @@ class ProjectMemberService(BaseService):
         if project_member.role == ProjectMemberRole.OWNER:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You're the owner of the project",
+                detail="Project Owner cannot be removed",
             )
 
         await self._delete(project_member)

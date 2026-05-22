@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -57,7 +57,7 @@ class ProjectService(BaseService):
         project = await self.get(id)
         await self.check_project_owner(id, current_user)
 
-        project.deleted_at = datetime.now(timezone.utc)
+        project.deleted_at = datetime.now()
 
         await self._update(project)
 
@@ -74,3 +74,5 @@ class ProjectService(BaseService):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only project owner can perform this action.",
             )
+
+        return project_member
