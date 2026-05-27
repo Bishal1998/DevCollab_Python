@@ -16,6 +16,7 @@ from app.services import (
     SubscriptionService,
     UsageService,
 )
+from app.services.webhook_service import WebhookService
 from app.utils.jwt_token import verify_access_token
 
 session_dep = Annotated[AsyncSession, Depends(get_session)]
@@ -102,3 +103,10 @@ async def get_current_user(
 
 
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
+
+
+def get_webhook_service(session: session_dep):
+    return WebhookService(session)
+
+
+WebhookServiceDep = Annotated[WebhookService, Depends(get_webhook_service)]

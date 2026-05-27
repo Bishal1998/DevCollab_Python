@@ -1,11 +1,18 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+import stripe
+from fastapi import APIRouter, Header, HTTPException, Request, status
 
-from app.dependency import CurrentUserDep, PlanServiceDep, SubscriptionServiceDep
+from app.dependency import (
+    CurrentUserDep,
+    PlanServiceDep,
+    SubscriptionServiceDep,
+    WebhookServiceDep,
+)
 from app.schema import ReadPlan, ReadSubscription
 from app.schema.plan_schema import CheckoutRequest
+from config import stripe_settings
 
 router = APIRouter(prefix="/api", tags=["Subscription & Billings"])
 
@@ -47,3 +54,43 @@ async def customer_portal(
     subscription_service: SubscriptionServiceDep, current_user: CurrentUserDep
 ):
     return await subscription_service.customer_portal(current_user)
+
+
+@router.post("/webhooks/stripe")
+async def stripe_webhook(
+    request: Request,
+    service: WebhookServiceDep,
+    stripe_signature: str = Header(alias="stripe-signature"),
+):
+    raw_body = await request.body()
+
+    ## verify signature
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=raw_body,
+            sig_header=stripe_signature,
+            secret=stripe_settings.STRIPE_WEBHOOK_SECRET,
+        )
+
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Stripe Signature"
+        )
+
+    event_type = event["type"]
+    event_data = event["data"]["object"]
+
+    if event_type == "checkout.session.completed":
+        await service.handle_checkout_completed(event_data)
+
+    elif event_type == "customer.subscription.updated":
+        await service.handle_subscription_updated(event_data)
+
+    elif event_type == "customer.subscription.deleted":
+        await service.handle_subscription_deleted(event_data)
+
+    elif event_type == "invoice.payment_failed":
+        await service.handle_payment_failed(event_data)
+
+    return {"received": True}

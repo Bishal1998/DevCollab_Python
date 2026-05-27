@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import stripe
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +27,14 @@ class WebhookService:
         if not all([user_id, plan_id, stripe_customer_id, stripe_subscription_id]):
             return
 
+        existing = await self.session.scalar(
+            select(Subscription).where(
+                Subscription.stripe_subscription_id == stripe_subscription_id
+            )
+        )
+        if existing:
+            return
+
         ## fetch full subscription details from stripe
         stripe_sub = await stripe.Subscription.retrieve_async(stripe_subscription_id)
 
@@ -38,9 +46,11 @@ class WebhookService:
             stripe_subscription_id=stripe_subscription_id,
             status=SubscriptionStatus(stripe_sub["status"]),
             current_period_start=datetime.fromtimestamp(
-                stripe_sub["current_period_start"]
+                stripe_sub["current_period_start"], tz=timezone.utc
             ),
-            current_period_end=datetime.fromtimestamp(stripe_sub["current_period_end"]),
+            current_period_end=datetime.fromtimestamp(
+                stripe_sub["current_period_end"], tz=timezone.utc
+            ),
             cancel_at_period_end=stripe_sub["cancel_at_period_end"],
         )
         self.session.add(subscription)
@@ -60,10 +70,10 @@ class WebhookService:
 
         subscription.status = SubscriptionStatus(event_data["status"])
         subscription.current_period_start = datetime.fromtimestamp(
-            event_data["current_period_start"]
+            event_data["current_period_start"], tz=timezone.utc
         )
         subscription.current_period_end = datetime.fromtimestamp(
-            event_data["current_period_end"]
+            event_data["current_period_end"], tz=timezone.utc
         )
         subscription.cancel_at_period_end = event_data["cancel_at_period_end"]
 
