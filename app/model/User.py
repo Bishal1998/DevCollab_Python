@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import EmailStr
+from sqlalchemy import String
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Column, Field, Relationship, SQLModel
 
@@ -32,6 +33,10 @@ class User(SQLModel, table=True):
         sa_column=Column(
             postgresql.TIMESTAMP, default=None, onupdate=datetime.now, nullable=True
         )
+    )
+
+    stripe_customer_id: Optional[str] = Field(
+        sa_column=Column(String, nullable=True, unique=True, default=None)
     )
     deleted_at: Optional[datetime] = Field(
         sa_column=Column(postgresql.TIMESTAMP, default=None, nullable=True)

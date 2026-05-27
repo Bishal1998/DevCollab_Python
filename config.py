@@ -28,6 +28,7 @@ class JWTSettings(BaseSettings):
 
 class StripeSettings(BaseSettings):
     STRIPE_SECRET_KEY: str
+    DOMAIN: str
 
     model_config = _base_setting
 
