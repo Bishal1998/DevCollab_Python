@@ -12,3 +12,7 @@ class ReadPlan(BaseModel):
     max_previews: int
     unlimited_ai: bool
     active: bool
+
+
+class CheckoutRequest(BaseModel):
+    plan_id: UUID
