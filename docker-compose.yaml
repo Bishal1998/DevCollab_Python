@@ -28,5 +28,14 @@ services:
       timeout: 5s
       retries: 5
 
+  stripe:
+    image: stripe/stripe-cli:latest
+    command: listen --forward-to http://api:8000/api/webhooks/stripe
+    environment:
+      STRIPE_API_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_DEVICE_NAME: devcollab_docker
+    depends_on:
+      - api
+
 volumes:
   pgdata:

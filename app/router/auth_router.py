@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from fastapi import APIRouter
 
 from app.dependency import AuthServiceDep, CurrentUserDep

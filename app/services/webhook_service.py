@@ -36,7 +36,13 @@ class WebhookService:
             return
 
         ## fetch full subscription details from stripe
-        stripe_sub = await stripe.Subscription.retrieve_async(stripe_subscription_id)
+        stripe_sub = await stripe.Subscription.retrieve_async(
+            stripe_subscription_id, expand=["latest_invoice"]
+        )
+
+        latest_invoice = stripe_sub["latest_invoice"]
+        period_start = latest_invoice["period_start"]
+        period_end = latest_invoice["period_end"]
 
         ## create subscription row in db
         subscription = Subscription(
@@ -46,11 +52,11 @@ class WebhookService:
             stripe_subscription_id=stripe_subscription_id,
             status=SubscriptionStatus(stripe_sub["status"]),
             current_period_start=datetime.fromtimestamp(
-                stripe_sub["current_period_start"], tz=timezone.utc
-            ),
+                period_start, tz=timezone.utc
+            ).replace(tzinfo=None),
             current_period_end=datetime.fromtimestamp(
-                stripe_sub["current_period_end"], tz=timezone.utc
-            ),
+                period_end, tz=timezone.utc
+            ).replace(tzinfo=None),
             cancel_at_period_end=stripe_sub["cancel_at_period_end"],
         )
         self.session.add(subscription)
@@ -68,13 +74,20 @@ class WebhookService:
         if not subscription:
             return
 
+        # Fetch fresh subscription with latest_invoice expanded
+        stripe_sub = await stripe.Subscription.retrieve_async(
+            stripe_subscription_id, expand=["latest_invoice"]
+        )
+
+        latest_invoice = stripe_sub["latest_invoice"]
+
         subscription.status = SubscriptionStatus(event_data["status"])
         subscription.current_period_start = datetime.fromtimestamp(
-            event_data["current_period_start"], tz=timezone.utc
-        )
+            latest_invoice["period_start"], tz=timezone.utc
+        ).replace(tzinfo=None)
         subscription.current_period_end = datetime.fromtimestamp(
-            event_data["current_period_end"], tz=timezone.utc
-        )
+            latest_invoice["period_end"], tz=timezone.utc
+        ).replace(tzinfo=None)
         subscription.cancel_at_period_end = event_data["cancel_at_period_end"]
 
         self.session.add(subscription)
