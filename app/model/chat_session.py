@@ -1,12 +1,12 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.model import Project, User
+    from app.model import ChatMessage, Project, User
 
 
 class ChatSession(SQLModel, table=True):
@@ -15,7 +15,6 @@ class ChatSession(SQLModel, table=True):
     id: UUID = Field(sa_column=Column(postgresql.UUID, default=uuid4, primary_key=True))
     user_id: UUID = Field(foreign_key="users.id", nullable=False)
     project_id: UUID = Field(foreign_key="projects.id", nullable=False)
-    title: str = Field(nullable=False)
     created_at: datetime = Field(
         sa_column=Column(postgresql.TIMESTAMP, default=datetime.now)
     )
@@ -32,5 +31,9 @@ class ChatSession(SQLModel, table=True):
         back_populates="chat_session", sa_relationship_kwargs={"lazy": "selectin"}
     )
     project: Optional["Project"] = Relationship(
+        back_populates="chat_session", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
+    chat_messages: List["ChatMessage"] = Relationship(
         back_populates="chat_session", sa_relationship_kwargs={"lazy": "selectin"}
     )

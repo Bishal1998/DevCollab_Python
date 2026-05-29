@@ -9,7 +9,6 @@ from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.model import (
-        ChatMessage,
         ChatSession,
         ProjectMember,
         Subscription,
@@ -53,9 +52,6 @@ class User(SQLModel, table=True):
         },
     )
     chat_session: List["ChatSession"] = Relationship(
-        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
-    )
-    chat_message: List["ChatMessage"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )
     usage_log: List["UsageLog"] = Relationship(
