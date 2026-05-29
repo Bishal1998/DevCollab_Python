@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_session
 from app.model.user import User
 from app.services import (
+    AIService,
     AuthService,
     FileService,
     PlanService,
@@ -15,8 +16,8 @@ from app.services import (
     ProjectService,
     SubscriptionService,
     UsageService,
+    WebhookService,
 )
-from app.services.webhook_service import WebhookService
 from app.utils.jwt_token import verify_access_token
 
 session_dep = Annotated[AsyncSession, Depends(get_session)]
@@ -110,3 +111,10 @@ def get_webhook_service(session: session_dep):
 
 
 WebhookServiceDep = Annotated[WebhookService, Depends(get_webhook_service)]
+
+
+def get_ai_service(session: session_dep):
+    return AIService(session)
+
+
+AIServiceDep = Annotated[AIService, Depends(get_ai_service)]
