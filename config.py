@@ -34,6 +34,16 @@ class StripeSettings(BaseSettings):
     model_config = _base_setting
 
 
+class AISettings(BaseSettings):
+    OPEN_ROUTER_API_KEY: str
+    AI_MODEL: str = "poolside/laguna-m.1:free"
+    AI_MAX_TOKENS: int = 4096
+    AI_TOOL_MAX_ROUNDS: int = 10  # max tool-use round trips per request
+
+    model_config = _base_setting
+
+
 db_settings = DatabaseSettings()
 jwt_settings = JWTSettings()
 stripe_settings = StripeSettings()
+ai_settings = AISettings()
