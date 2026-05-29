@@ -1,3 +1,4 @@
+from app.schema.ai_schema import ChatRequest
 from app.schema.auth_schema import Login, Signup
 from app.schema.file_schema import ReadFile
 from app.schema.plan_schema import CheckoutRequest, ReadPlan
@@ -19,4 +20,5 @@ __all__ = [
     "ReadSubscription",
     "ReadTodayUsage",
     "CheckoutRequest",
+    "ChatRequest",
 ]
