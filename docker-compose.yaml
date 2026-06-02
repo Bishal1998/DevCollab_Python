@@ -6,6 +6,7 @@ services:
     environment:
       POSTGRES_SERVER: db
       POSTGRES_PORT: 5432
+      MINIO_ENDPOINT: minio:9000
 
     ports:
       - "8000:8000"
@@ -37,5 +38,24 @@ services:
     depends_on:
       - api
 
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000" # API endpoint
+      - "9001:9001" # Web console
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pgdata:
+  minio_data:
