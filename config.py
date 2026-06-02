@@ -43,7 +43,19 @@ class AISettings(BaseSettings):
     model_config = _base_setting
 
 
+class MinioSettings(BaseSettings):
+    MINIO_ENDPOINT: str
+    MINIO_ACCESS_KEY: str
+    MINIO_SECRET_KEY: str
+    MINIO_SECURE: bool
+    MINIO_PROJECT_BUCKET: str
+    MINIO_TEMPLATE_BUCKET: str
+
+    model_config = _base_setting
+
+
 db_settings = DatabaseSettings()
 jwt_settings = JWTSettings()
 stripe_settings = StripeSettings()
 ai_settings = AISettings()
+minio_settings = MinioSettings()
