@@ -1,3 +1,4 @@
+import asyncio
 import json
 from collections.abc import AsyncGenerator
 from uuid import UUID
@@ -45,12 +46,16 @@ class AIService:
 
         system_prompt = build_system_prompt(file_tree)
 
+        # Create a tool executor bound to this project
+        async def tool_executor(name: str, args: dict) -> str:
+            return await self._execute_tool(name, args, project_id)
+
         full_response = ""
 
         async for chunk in self.ai_client.stream_with_tools(
             system_prompt=system_prompt,
             messages=messages,
-            tool_executor=self._execute_tool,
+            tool_executor=tool_executor,
         ):
             full_response += chunk
             yield chunk
@@ -67,13 +72,14 @@ class AIService:
         for file in parsed.files:
             await self._save_file(project_id, file.path, file.content)
 
-    async def _execute_tool(self, name: str, args: dict) -> str:
+    async def _execute_tool(self, name: str, args: dict, project_id: UUID) -> str:
         if name == "get_file_content":
             paths = args.get("paths", [])
             contents = {}
             for path in paths:
-                content = await self._read_file(path)
+                content = await self._read_file(path, project_id)
                 contents[path] = content
+            return json.dumps(contents, indent=2)
 
         return json.dumps({"error": f"Unknown tool: {name}"})
 
@@ -130,23 +136,10 @@ class AIService:
         return message
 
     async def _get_file_tree(self, project_id: UUID) -> str:
-        """
-        Get the project's file tree from MinIO.
-        TODO: Implement with MinIO client — list all objects
-        under the project's prefix and format as a tree string.
-        """
-        return "(empty project — MinIO not connected yet)"
+        return await asyncio.to_thread(self.storage.get_file_tree, str(project_id))
 
-    async def _read_file(self, path: str) -> str:
-        """
-        Read a single file's content from MinIO.
-        TODO: Implement with MinIO client — get_object().
-        """
-        return f"(file not found: {path} — MinIO not connected yet)"
+    async def _read_file(self, path: str, project_id: UUID) -> str:
+        return await asyncio.to_thread(self.storage.read_file, str(project_id), path)
 
     async def _save_file(self, project_id: UUID, path: str, content: str) -> None:
-        """
-        Write a file to MinIO under the project's prefix.
-        TODO: Implement with MinIO client — put_object().
-        """
-        pass
+        await asyncio.to_thread(self.storage.write_file, str(project_id), path, content)
