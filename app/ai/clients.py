@@ -4,8 +4,9 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
-from ai.tools import TOOLS
 from config import ai_settings
+
+from .tools import TOOLS
 
 
 class AiClient:
@@ -53,60 +54,64 @@ class AiClient:
             # ^ Tool call chunks arrive in pieces across multiple stream events.
             #   We accumulate them by index, then assemble complete calls at the end.
 
-            stream = await self.client.chat.completions.create(
-                model=self.model,
-                max_tokens=self.max_tokens,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    *messages,
-                ],
-                tools=TOOLS,
-                stream=True,
-            )
+            try:
+                stream = await self.client.chat.completions.create(
+                    model=self.model,
+                    max_tokens=self.max_tokens,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        *messages,
+                    ],
+                    tools=TOOLS,
+                    stream=True,
+                )
+            except Exception as e:
+                print(f"[AiClient] API call failed: {type(e).__name__}: {e}")
+                yield f"\n[LLM Error: {e}]"
+                return
 
-            async for chunk in stream:
-                choice = chunk.choices[0] if chunk.choices else None
-                if not choice:
-                    continue
+            try:
+                async for chunk in stream:
+                    choice = chunk.choices[0] if chunk.choices else None
+                    if not choice:
+                        continue
 
-                delta = choice.delta
+                    delta = choice.delta
 
-                # --- Text content: yield immediately ---
-                if delta.content:
-                    collected_text += delta.content
-                    yield delta.content
+                    if delta.content:
+                        collected_text += delta.content
+                        yield delta.content
 
-                # --- Tool call chunks: accumulate ---
-                # OpenAI streams tool calls in pieces:
-                #   First chunk has: index, id, function.name
-                #   Subsequent chunks have: index, function.arguments (partial JSON)
-                # We collect all pieces, then assemble when the stream ends.
-                if delta.tool_calls:
-                    for tc in delta.tool_calls:
-                        idx = tc.index
-                        if idx not in tool_calls_accumulator:
-                            tool_calls_accumulator[idx] = {
-                                "id": "",
-                                "name": "",
-                                "arguments": "",
-                            }
-                        if tc.id:
-                            tool_calls_accumulator[idx]["id"] = tc.id
-                        if tc.function and tc.function.name:
-                            tool_calls_accumulator[idx]["name"] = tc.function.name
-                        if tc.function and tc.function.arguments:
-                            tool_calls_accumulator[idx]["arguments"] += (
-                                tc.function.arguments
-                            )
+                    if delta.tool_calls:
+                        for tc in delta.tool_calls:
+                            idx = tc.index
+                            if idx not in tool_calls_accumulator:
+                                tool_calls_accumulator[idx] = {
+                                    "id": "",
+                                    "name": "",
+                                    "arguments": "",
+                                }
+                            if tc.id:
+                                tool_calls_accumulator[idx]["id"] = tc.id
+                            if tc.function and tc.function.name:
+                                tool_calls_accumulator[idx]["name"] = tc.function.name
+                            if tc.function and tc.function.arguments:
+                                tool_calls_accumulator[idx]["arguments"] += (
+                                    tc.function.arguments
+                                )
 
-                # --- Check if stream is done ---
-                if choice.finish_reason == "stop":
-                    # Model finished with text, no tool calls. We're done.
-                    return
+                    if choice.finish_reason == "stop":
+                        return
 
-                if choice.finish_reason == "tool_calls":
-                    # Model wants to call tools. Break out to execute them.
-                    break
+                    if choice.finish_reason == "tool_calls":
+                        break
+
+            except Exception as e:
+                print(
+                    f"[AiClient] Stream error on round {rounds}: {type(e).__name__}: {e}"
+                )
+                yield f"\n[LLM Error: {e}]"
+                return
 
             # --- No tool calls accumulated? We're done ---
             if not tool_calls_accumulator:
