@@ -12,12 +12,14 @@ from app.ai.parser import parse_response
 from app.ai.prompts import build_system_prompt
 from app.model import ChatMessage, ChatSession
 from app.model.chat_message import MessageRole
+from app.services.storage_service import StorageService
 
 
 class AIService:
     def __init__(self, session: AsyncSession):
         self.session = session
         self.client = AiClient()
+        self.storage = StorageService()
 
     async def chat(
         self,
@@ -52,7 +54,7 @@ class AIService:
 
         full_response = ""
 
-        async for chunk in self.ai_client.stream_with_tools(
+        async for chunk in self.client.stream_with_tools(
             system_prompt=system_prompt,
             messages=messages,
             tool_executor=tool_executor,

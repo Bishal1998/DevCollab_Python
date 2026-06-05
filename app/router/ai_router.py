@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from app.dependency import AiServiceDep, CurrentUserDep
+from app.dependency import AIServiceDep, CurrentUserDep
 from app.schema import ChatRequest
 
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 async def chat(
     request: ChatRequest,
     current_user: CurrentUserDep,
-    service: AiServiceDep,
+    service: AIServiceDep,
 ):
     """
     Stream an AI response for the given prompt.

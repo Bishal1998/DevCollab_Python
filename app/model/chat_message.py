@@ -7,7 +7,7 @@ from sqlalchemy.dialects import postgresql
 from sqlmodel import Column, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.model import ChatMessage
+    from app.model import ChatSession
 
 
 class MessageRole(str, Enum):
@@ -38,6 +38,6 @@ class ChatMessage(SQLModel, table=True):
         sa_column=Column(postgresql.TIMESTAMP, default=datetime.now)
     )
 
-    chat_session: Optional["ChatMessage"] = Relationship(
-        back_populates="chat_message", sa_relationship_kwargs={"lazy": "selectin"}
+    chat_session: Optional["ChatSession"] = Relationship(
+        back_populates="chat_messages", sa_relationship_kwargs={"lazy": "selectin"}
     )

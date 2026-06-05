@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.router.ai_router import router as AIRouter
 from app.router.auth_router import router as AuthRouter
 from app.router.file_router import router as FileRouter
 from app.router.plan_router import router as PlanRouter
@@ -15,3 +16,4 @@ master_router.include_router(FileRouter)
 master_router.include_router(ProjectMemberRouter)
 master_router.include_router(PlanRouter)
 master_router.include_router(UsageRouter)
+master_router.include_router(AIRouter)

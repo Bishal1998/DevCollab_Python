@@ -1,5 +1,5 @@
 import io
-from ast import List
+from typing import List
 
 from minio import Minio
 from minio.error import S3Error
@@ -26,6 +26,10 @@ class StorageService:
         self._ensure_bucket(self.project_bucket)
 
         prefix = f"{project_id}/"
+        print(
+            f"[Storage] Looking for files with prefix: '{prefix}' in bucket: '{self.project_bucket}'"
+        )
+
         objects = self.client.list_objects(
             self.project_bucket, prefix=prefix, recursive=True
         )
@@ -34,6 +38,7 @@ class StorageService:
             relative_path = obj.object_name.removeprefix(prefix)
             if relative_path:
                 paths.append(relative_path)
+        print(f"[Storage] Found {len(paths)} files: {paths}")
 
         if not paths:
             return "(empty object)"
