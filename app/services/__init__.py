@@ -1,4 +1,4 @@
-from app.services.ai_service import AIService
+from app.services.ai_service import AiService
 from app.services.auth_service import AuthService
 from app.services.base_service import BaseService
 from app.services.file_service import FileService
@@ -18,6 +18,6 @@ __all__ = [
     "SubscriptionService",
     "PlanService",
     "UsageService",
-    "AIService",
+    "AiService",
     "WebhookService",
 ]
