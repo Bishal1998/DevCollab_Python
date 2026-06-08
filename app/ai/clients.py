@@ -4,17 +4,13 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
+from app.schema import ChatEvent, ChatEventType
 from config import ai_settings
 
 from .tools import TOOLS
 
 
 class AiClient:
-    """
-    Wraps the OpenAI-compatible async client (pointed at OpenRouter).
-    Handles streaming responses and the tool-use orchestration loop.
-    """
-
     def __init__(self):
         self.client = AsyncOpenAI(
             base_url="https://openrouter.ai/api/v1",
@@ -28,31 +24,18 @@ class AiClient:
         system_prompt: str,
         messages: list[dict],
         tool_executor: Any,
-    ) -> AsyncGenerator[str, None]:
+    ) -> AsyncGenerator[ChatEvent, None]:
         """
-        Stream a response from the LLM, handling tool calls automatically.
-
-        The tool-use loop:
-        1. Send messages to LLM with streaming
-        2. If LLM returns tool_calls → execute them → append results → re-send
-        3. Repeat until LLM produces a final text response (no more tool calls)
-
-        Yields text chunks as they arrive for real-time SSE forwarding.
+        Now yields ChatEvent objects instead of raw strings.
+        The service/router converts these to SSE format.
         """
         rounds = 0
 
         while rounds < ai_settings.AI_TOOL_MAX_ROUNDS:
             rounds += 1
 
-            # --- Stream the response ---
-            # We need to both yield text chunks AND accumulate tool calls.
-            # Text chunks go to the frontend immediately.
-            # Tool calls are collected and executed after the stream ends.
-
             collected_text = ""
             tool_calls_accumulator: dict[int, dict] = {}
-            # ^ Tool call chunks arrive in pieces across multiple stream events.
-            #   We accumulate them by index, then assemble complete calls at the end.
 
             try:
                 stream = await self.client.chat.completions.create(
@@ -67,7 +50,7 @@ class AiClient:
                 )
             except Exception as e:
                 print(f"[AiClient] API call failed: {type(e).__name__}: {e}")
-                yield f"\n[LLM Error: {e}]"
+                yield ChatEvent(ChatEventType.ERROR, {"message": str(e)})
                 return
 
             try:
@@ -80,7 +63,10 @@ class AiClient:
 
                     if delta.content:
                         collected_text += delta.content
-                        yield delta.content
+                        yield ChatEvent(
+                            ChatEventType.TEXT_CHUNK,
+                            {"content": delta.content},
+                        )
 
                     if delta.tool_calls:
                         for tc in delta.tool_calls:
@@ -107,22 +93,14 @@ class AiClient:
                         break
 
             except Exception as e:
-                print(
-                    f"[AiClient] Stream error on round {rounds}: {type(e).__name__}: {e}"
-                )
-                yield f"\n[LLM Error: {e}]"
+                print(f"[AiClient] Stream error: {type(e).__name__}: {e}")
+                yield ChatEvent(ChatEventType.ERROR, {"message": str(e)})
                 return
 
-            # --- No tool calls accumulated? We're done ---
             if not tool_calls_accumulator:
                 return
 
-            # --- Execute tool calls ---
-            # 1. Build the assistant message with tool calls (for conversation history)
-            # 2. Execute each tool
-            # 3. Append tool results as separate messages
-            # 4. Loop back to send updated conversation to LLM
-
+            # --- Build assistant message for conversation history ---
             assistant_tool_calls = [
                 {
                     "id": tc["id"],
@@ -135,20 +113,31 @@ class AiClient:
                 for tc in tool_calls_accumulator.values()
             ]
 
-            # Add assistant's response (with tool calls) to conversation
             assistant_msg = {"role": "assistant", "tool_calls": assistant_tool_calls}
             if collected_text:
                 assistant_msg["content"] = collected_text
             messages.append(assistant_msg)
 
-            # Execute each tool and add results
+            # --- Execute tools with lifecycle events ---
             for tc in tool_calls_accumulator.values():
                 try:
                     args = json.loads(tc["arguments"])
                 except json.JSONDecodeError:
                     args = {}
 
+                # Emit tool_call_start so frontend can show a spinner
+                yield ChatEvent(
+                    ChatEventType.TOOL_CALL_START,
+                    {"tool": tc["name"], **args},
+                )
+
                 result = await tool_executor(tc["name"], args)
+
+                # Emit tool_call_end so frontend can hide the spinner
+                yield ChatEvent(
+                    ChatEventType.TOOL_CALL_END,
+                    {"tool": tc["name"]},
+                )
 
                 messages.append(
                     {
@@ -158,5 +147,6 @@ class AiClient:
                     }
                 )
 
-            # Loop continues — next iteration sends the updated
-            # conversation (with tool results) back to the LLM
+            print(
+                f"[AiClient] Tool round {rounds} complete. Tools called: {[tc['name'] for tc in tool_calls_accumulator.values()]}"
+            )
